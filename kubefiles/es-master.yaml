@@ -1,0 +1,54 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: es-master
+  labels:
+    component: elasticsearch
+    role: master
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        component: elasticsearch
+        role: master
+    spec:
+      initContainers:
+      - name: init-sysctl
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        command: ["sysctl", "-w", "vm.max_map_count=262144"]
+        securityContext:
+          privileged: true
+      containers:
+      - name: es-master
+        securityContext:
+          privileged: false
+          capabilities:
+            add:
+              - IPC_LOCK
+              - SYS_RESOURCE
+        image: elasticsearch-silk:5.6.1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: "CLUSTER_NAME"
+          value: "escluster01"
+        - name: "ES_JAVA_OPTS"
+          value: "-Xms512m -Xmx512m"
+        - name: "NUMBER_OF_MASTERS"
+          value: "2"
+        - name: "NODE_NAME"
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - containerPort: 9300
+          name: transport
+          protocol: TCP
+        volumeMounts:
+        - name: storage
+          mountPath: /data
+      volumes:
+          - emptyDir:
+              medium: ""
+            name: "storage"
