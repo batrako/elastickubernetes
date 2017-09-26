@@ -1,17 +1,17 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: es-data
+  name: es-client
   labels:
     component: elasticsearch
-    role: data
+    role: client
 spec:
   replicas: 2
   template:
     metadata:
       labels:
         component: elasticsearch
-        role: data
+        role: client
     spec:
       initContainers:
       - name: init-sysctl
@@ -34,7 +34,7 @@ spec:
         - name: "CLUSTER_NAME"
           value: "escluster01"
         - name: "ES_JAVA_OPTS"
-          value: "-Xms512m -Xmx512m"
+          value: "-Xms256m -Xmx256m"
         - name: "NODE_NAME"
           valueFrom:
             fieldRef:
@@ -43,6 +43,15 @@ spec:
           value: "false"
         - name: "NODE_INGEST"
           value: "false"
+        - name: "NODE_DATA"
+          value: "false"
+        - name: "XPACK_MONITORING_ENABLED"
+          value: "false"
+        - name: "XPACK_SECURITY_ENABLED"
+          value: "false"
+        - name: "XPACK_WATCHER_ENABLED"
+          value: "false"
+
         ports:
         - containerPort: 9300
           name: transport
